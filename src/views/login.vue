@@ -49,7 +49,7 @@ import axios from 'axios';
 
 
 <style scoped>
-.login-wrap {
+  .login-wrap {
   background-color: #324152;
   height: 100%;
   display: flex;

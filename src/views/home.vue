@@ -14,7 +14,7 @@
           </el-col>
         </el-row>
       </el-header>
-      <el-container>
+      <el-container class="inner">
         <!-- 侧边导航 -->
         <el-aside width="200px" class="aside">
           <el-menu
@@ -94,7 +94,10 @@
             
           </el-menu>
         </el-aside>
-        <el-main class="main">Main</el-main>
+        <!-- 内容部分 -->
+        <el-main class="main">
+          <router-view></router-view>
+        </el-main>
       </el-container>
     </el-container>
 </template>
@@ -143,7 +146,12 @@
 .aside {
   background-color: #d3dce6;
 }
-
+.aside .inner{
+  height: 100%;
+}
+.el-menu-vertical-demo{
+  height: 100%;
+}
 .main {
   background-color: #e9eef3;
 }
