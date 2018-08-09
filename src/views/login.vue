@@ -6,7 +6,7 @@
         <el-input v-model="formdata.username"></el-input>
       </el-form-item>
       <el-form-item label="密码">
-        <el-input v-model="formdata.password"></el-input>
+        <el-input v-model="formdata.password"  @keyup.enter.native="handleLogin"></el-input>
       </el-form-item>
       <el-button type="primary" class="login-btn" @click="handleLogin">登录</el-button>
   </el-form>
@@ -33,7 +33,7 @@ import axios from 'axios';
             console.log(res)
             if(res.data.meta.status === 200){
               sessionStorage.setItem('token',res.data.data.token)
-              this.$router.push('/home');
+              this.$router.push('/');
               this.$message.success(res.data.meta.msg);
             }else{
               this.$message.success(res.data.meta.msg);
@@ -48,7 +48,7 @@ import axios from 'axios';
 </script>
 
 
-<style>
+<style scoped>
 .login-wrap {
   background-color: #324152;
   height: 100%;
