@@ -32,6 +32,7 @@ import axios from 'axios';
           .then(res => {
             console.log(res)
             if(res.data.meta.status === 200){
+              sessionStorage.setItem('token',res.data.data.token)
               this.$router.push('/home');
               this.$message.success(res.data.meta.msg);
             }else{
