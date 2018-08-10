@@ -49,7 +49,7 @@
             label="操作">
             <template slot-scope="scope">
               <el-row>
-                <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+                <el-button type="primary" icon="el-icon-edit" size="mini" @click="handleEditUser(scope.row)"></el-button>
                 <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
                 <el-button type="success" icon="el-icon-check" size="mini"></el-button>
               </el-row>
@@ -93,6 +93,29 @@
           <el-button type="primary" @click="handleAddUser">确 定</el-button>
         </div>
       </el-dialog>
+
+      <!-- 编辑弹出框 -->
+      <el-dialog title="添加用户" :visible.sync="EditDialogFormVisible" @close="handleClose">
+        <el-form
+        :model="form" 
+        ref="editForm"
+        label-width="100px">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="form.username" auto-complete="off" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱">
+            <el-input v-model="form.email" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="电话">
+            <el-input v-model="form.mobile" auto-complete="off"></el-input>
+          </el-form-item>
+
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="EditDialogFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleEditUserBtn">确 定</el-button>
+        </div>
+      </el-dialog>
     </el-card>
 </template>
 
@@ -123,6 +146,7 @@ export default {
         email: '',
         mobile: ''
       },
+      // 控制添加弹出框显示与隐藏
       AddDialogFormVisible: false,
       // 添加表单验证
       rules: {
@@ -134,7 +158,11 @@ export default {
           { required: true, message: '请输入密码', trigger: 'blur' },
           { min: 6, max: 12, message: '长度在 6 到 12 个字符', trigger: 'blur' }
         ]
-      }
+      },
+
+      // 编辑用户数据
+      // 控制编辑弹出框显示与隐藏
+      EditDialogFormVisible: false
     };
   },
   created () {
@@ -194,7 +222,47 @@ export default {
         }
       });
       
+    },
+    // 当点击编辑按钮时
+    async handleEditUser (user) {
+      this.EditDialogFormVisible= true;
+      const res = await this.$http.get(`users/${user.id}`)
+      console.log(user)
+      console.log(res)
+      const {meta: {status, msg}} = res.data;
+      if(status === 200) {
+        this.form = res.data.data;
+        this.form.id= user.id;
+        console.log(this.form.id);
+        
+        this.form.email = user.email;
+        this.form.mobile = user.mobile;
+      }else{
+        this.$message.error(msg)
+      }
+    },
+    async handleEditUserBtn () {
+      var res = await this.$http.put(`users/${this.form.id}`,
+      { email:this.form.email,
+        mobile:this.form.mobile})
+        const {meta: {status, msg}} = res.data;
+        if(status === 200) {
+          this.$message.success(msg);
+          this.renderRequest();
+          this.EditDialogFormVisible= false;
+          this.$refs.editForm.resetFields();
+          for(var key in this.form){
+            this.form[key]='';
+          }
+        }else{
+          this.$message.error(msg)
+        }
+    },
+    handleClose() {
+    for(var key in this.form){
+      this.form[key]='';
     }
+  }
   }
 };
 </script>
