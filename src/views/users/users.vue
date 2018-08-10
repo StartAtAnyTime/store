@@ -15,7 +15,7 @@
         <el-table
           stripe
           border
-          :data="fromdata"
+          :data="formdata"
           style="width: 100%">
           <el-table-column
           type="index" >
@@ -41,7 +41,8 @@
               <el-switch
                 v-model="scope.row.mg_state"
                 active-color="#13ce66"
-                inactive-color="#ff4949">
+                inactive-color="#ff4949"
+                @change="handleStatus(scope.row)">
               </el-switch>
             </template>
           </el-table-column>
@@ -50,7 +51,7 @@
             <template slot-scope="scope">
               <el-row>
                 <el-button type="primary" icon="el-icon-edit" size="mini" @click="handleEditUser(scope.row)"></el-button>
-                <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+                <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleDelUser(scope.row)"></el-button>
                 <el-button type="success" icon="el-icon-check" size="mini"></el-button>
               </el-row>
             </template>
@@ -116,6 +117,9 @@
           <el-button type="primary" @click="handleEditUserBtn">确 定</el-button>
         </div>
       </el-dialog>
+
+      <!-- 刪除弹出框 -->
+
     </el-card>
 </template>
 
@@ -125,7 +129,7 @@ export default {
   data () {
     return {
       // 用户列表数据
-      fromdata: [],
+      formdata: [],
       
       // 分页部分数据
       // 当前页码
@@ -178,7 +182,7 @@ export default {
         &pagesize=${this.pageSize}&query=${this.serachValue}`);
       var status = response.data.meta.status;
       if (status === 200) {
-        this.fromdata = response.data.data.users;
+        this.formdata = response.data.data.users;
         // 总共的条数
         this.totalPage = response.data.data.total;
       } else {
@@ -259,10 +263,48 @@ export default {
         }
     },
     handleClose() {
-    for(var key in this.form){
-      this.form[key]='';
+      for(var key in this.form){
+        this.form[key]='';
+      }
+    },
+    async handleDelUser(user) {
+      this.$confirm('此操作将删除该用户, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const res= await this.$http.delete(`users/${user.id}`);
+        const {meta: {status, msg}} = res.data;
+        if(status===200) {
+          // 如果当前页的用户只有一条并且不是第一页的时候，删除之后让页码调回一页
+          if(this.formdata.length==1 && this.currentPage != 1){
+            this.currentPage--;
+          }
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          });
+          this.renderRequest();
+        }else{
+          this.$message.error(msg)
+        }  
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });          
+      });
+    },
+    async handleStatus (user) {
+      console.log(user);
+      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`);
+      const {meta: {status, msg}} = res.data;
+      if(status === 200) {
+        this.$message.success(msg)
+      }else{
+        this.$message.error(msg)
+      }
     }
-  }
   }
 };
 </script>
