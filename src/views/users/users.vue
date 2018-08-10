@@ -38,7 +38,7 @@
           label="用户状态">
           <template slot-scope="scope">
             <el-switch
-              v-model="scope.row.mg_status"
+              v-model="scope.row.mg_state"
               active-color="#13ce66"
               inactive-color="#ff4949">
             </el-switch>
@@ -55,6 +55,17 @@
           </template>
         </el-table-column>
       </el-table>
+   
+    <!-- 分页部分 -->
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      :page-sizes="[2, 4, 6, 8]"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="totalPage">
+    </el-pagination>  
     </el-card>
 </template>
 
@@ -63,24 +74,52 @@
     export default {
       data () {
         return {
-          fromdata: []
+          // 用户列表数据
+          fromdata: [],
+          // 分页部分数据
+          // 当前页码
+          currentPage:1,
+          // 总共数据的条数
+          totalPage:0,
+          // 每页显示的条数
+          pageSize:2
         }
       },
       created () {
         this.renderRequest();
       },
       methods:{
+        // 请求页面数据
         async renderRequest () {
           // 获取token  并在请求头上设置Authorization=token
           var token = sessionStorage.getItem('token');
           axios.defaults.headers.common['Authorization'] = token;
-          var response = await axios.get('http://localhost:8888/api/private/v1/users?pagenum=1&pagesize=10')
+          var response = await axios.get
+            (`http://localhost:8888/api/private/v1/users?pagenum=${this.currentPage}&pagesize=${this.pageSize}`);
           console.log(response)
 
           var status = response.data.meta.status;
           if(status===200){
             this.fromdata = response.data.data.users;
+            // 总共的条数
+            this.totalPage = response.data.data.total;
+          }else{
+            this.$message.error(response.data.meta.msg)
           }
+        },
+        // 当页面条数发生变化时
+        // val指的是页面条数发生变化时所对应的条数
+        handleSizeChange (val) {
+          this.pageSize = val;
+          this.renderRequest();
+          console.log(val)
+        },
+        // 当当前页码发生变化时
+        // val指的是页码发生变化时所对应的页码
+        handleCurrentChange (val) {
+          this.currentPage = val;
+          this.renderRequest();
+          console.log(val)
         }
       }
     }
