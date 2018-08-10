@@ -6,7 +6,7 @@ import router from './router';
 // 导入element-ui
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
-import MyAxios from './plugins/MyAxios'
+import MyAxios from './plugins/MyAxios';
 // 导入全局样式
 import './assets/css/index.css';
 

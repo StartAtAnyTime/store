@@ -80,7 +80,7 @@
                 <span slot="title">订单列表</span>
                </el-menu-item>
             </el-submenu>
-            
+
             <el-submenu index="5">
               <template slot="title">
                 <i class="el-icon-location"></i>
@@ -91,7 +91,7 @@
                 <span slot="title">数据报表</span>
                </el-menu-item>
             </el-submenu>
-            
+
           </el-menu>
         </el-aside>
         <!-- 内容部分 -->
@@ -103,22 +103,22 @@
 </template>
 
 <script>
-  export default {
-    beforeCreate () {
-      var token = sessionStorage.getItem('token')
-      if(!token){
-        this.$message.error('请先去登录哟！')
-        this.$router.push('/login')
-      }
-    },
-    methods: {
+export default {
+  beforeCreate () {
+    var token = sessionStorage.getItem('token');
+    if (!token) {
+      this.$message.error('请先去登录哟！');
+      this.$router.push('/login');
+    }
+  },
+  methods: {
     handleLogout () {
       sessionStorage.clear();
-      this.$message.success('退出成功！')
-      this.$router.push('/login')
-    }
+      this.$message.success('退出成功！');
+      this.$router.push('/login');
     }
   }
+};
 </script>
 <style>
 .container {

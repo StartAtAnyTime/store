@@ -7,8 +7,8 @@
         <el-breadcrumb-item>用户列表</el-breadcrumb-item>
       </el-breadcrumb>
       <!-- 搜索框 -->
-      <el-input placeholder="请输入内容" class="input-with-select">
-       <el-button class="searchBtn" slot="append" icon="el-icon-search"></el-button>
+      <el-input clearable placeholder="请输入内容" class="input-with-select" v-model="serachValue">
+       <el-button class="searchBtn" slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
       </el-input>
       <el-button type="success" plain>成功按钮</el-button>
       <!-- 表格部分 -->
@@ -55,7 +55,7 @@
             </template>
           </el-table-column>
         </el-table>
-    
+
       <!-- 分页部分 -->
       <el-pagination
         @size-change="handleSizeChange"
@@ -65,64 +65,70 @@
         :page-sizes="[2, 4, 6, 8]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="totalPage">
-      </el-pagination>  
+      </el-pagination>
     </el-card>
 </template>
 
- <script>
- import axios from 'axios';
-    export default {
-      data () {
-        return {
-          // 用户列表数据
-          fromdata: [],
-          // 分页部分数据
-          // 当前页码
-          currentPage:1,
-          // 总共数据的条数
-          totalPage:0,
-          // 每页显示的条数
-          pageSize:2
-        }
-      },
-      created () {
-        this.renderRequest();
-      },
-      methods:{
-        // 请求页面数据
-        async renderRequest () {
-          // 获取token  并在请求头上设置Authorization=token
-          var token = sessionStorage.getItem('token');
-          axios.defaults.headers.common['Authorization'] = token;
-          var response = await this.$http.get(`users?pagenum=${this.currentPage}&pagesize=${this.pageSize}`);
-          console.log(response)
+<script>
+import axios from 'axios';
+export default {
+  data () {
+    return {
+      // 用户列表数据
+      fromdata: [],
+      // 分页部分数据
+      // 当前页码
+      currentPage: 1,
+      // 总共数据的条数
+      totalPage: 0,
+      // 每页显示的条数
+      pageSize: 2,
+      // 用户搜索的内容
+      serachValue: ''
+    };
+  },
+  created () {
+    this.renderRequest();
+  },
+  methods: {
+    // 请求页面数据
+    async renderRequest () {
+      // 获取token  并在请求头上设置Authorization=token
+      var token = sessionStorage.getItem('token');
+      axios.defaults.headers.common['Authorization'] = token;
+      var response = await this.$http.get(`users?pagenum=${this.currentPage}
+        &pagesize=${this.pageSize}&query=${this.serachValue}`);
+      console.log(response);
 
-          var status = response.data.meta.status;
-          if(status===200){
-            this.fromdata = response.data.data.users;
-            // 总共的条数
-            this.totalPage = response.data.data.total;
-          }else{
-            this.$message.error(response.data.meta.msg)
-          }
-        },
-        // 当页面条数发生变化时
-        // val指的是页面条数发生变化时所对应的条数
-        handleSizeChange (val) {
-          this.pageSize = val;
-          this.renderRequest();
-          console.log(val)
-        },
-        // 当当前页码发生变化时
-        // val指的是页码发生变化时所对应的页码
-        handleCurrentChange (val) {
-          this.currentPage = val;
-          this.renderRequest();
-          console.log(val)
-        }
+      var status = response.data.meta.status;
+      if (status === 200) {
+        this.fromdata = response.data.data.users;
+        // 总共的条数
+        this.totalPage = response.data.data.total;
+      } else {
+        this.$message.error(response.data.meta.msg);
       }
+    },
+    // 当页面条数发生变化时
+    // val指的是页面条数发生变化时所对应的条数
+    handleSizeChange (val) {
+      this.pageSize = val;
+      this.renderRequest();
+      console.log(val);
+    },
+    // 当当前页码发生变化时
+    // val指的是页码发生变化时所对应的页码
+    handleCurrentChange (val) {
+      this.currentPage = val;
+      this.renderRequest();
+    },
+    // 当点击搜索按钮时
+    handleSearch () {
+      this.renderRequest()
     }
-  </script>
+  }
+};
+</script>
 
 <style>
 .input-with-select{

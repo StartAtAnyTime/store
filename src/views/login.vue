@@ -43,31 +43,32 @@ import axios from 'axios';
             this.$message.error(err.status)
           })
         password: '',
+        name: '',
+        password: ''
       }
     };
   },
   methods: {
-    handleLogin(){
+    handleLogin() {
       this.$http
-        .post('login',this.formdata)
+        .post('login', this.formdata)
         .then(res => {
-          console.log(res)
-          if(res.data.meta.status === 200){
-            sessionStorage.setItem('token',res.data.data.token)
+          console.log(res);
+          if (res.data.meta.status === 200) {
+            sessionStorage.setItem('token', res.data.data.token);
             this.$router.push('/');
             this.$message.success(res.data.meta.msg);
-          }else{
+          } else {
             this.$message.success(res.data.meta.msg);
           }
         })
         .catch(err => {
-          this.$message.error(err.status)
-        })
+          this.$message.error(err.status);
+        });
     }
   }
-}
+};
 </script>
-
 
 <style scoped>
   .login-wrap {
