@@ -10,7 +10,7 @@
       <el-input clearable placeholder="请输入内容" class="input-with-select" v-model="serachValue">
        <el-button class="searchBtn" slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
       </el-input>
-      <el-button type="success" plain>成功按钮</el-button>
+      <el-button type="success" plain @click= "AddDialogFormVisible=true" >添加用户</el-button>
       <!-- 表格部分 -->
         <el-table
           stripe
@@ -36,6 +36,7 @@
           </el-table-column>
           <el-table-column
             label="用户状态">
+            <!-- scope.row绑定的当前所属的数据对象 -->
             <template slot-scope="scope">
               <el-switch
                 v-model="scope.row.mg_state"
@@ -49,8 +50,8 @@
             <template slot-scope="scope">
               <el-row>
                 <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
-                <el-button type="success" icon="el-icon-check" size="mini"></el-button>
                 <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+                <el-button type="success" icon="el-icon-check" size="mini"></el-button>
               </el-row>
             </template>
           </el-table-column>
@@ -66,6 +67,32 @@
         layout="total, sizes, prev, pager, next, jumper"
         :total="totalPage">
       </el-pagination>
+      <!-- 添加弹出框 -->
+      <el-dialog title="添加用户" :visible.sync="AddDialogFormVisible">
+        <el-form
+        :model="form" 
+        :rules="rules"
+        ref="formRules"
+        label-width="80px">
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="form.username" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="form.password" type="password" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱">
+            <el-input v-model="form.email" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="电话">
+            <el-input v-model="form.mobile" auto-complete="off"></el-input>
+          </el-form-item>
+
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="AddDialogFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleAddUser">确 定</el-button>
+        </div>
+      </el-dialog>
     </el-card>
 </template>
 
@@ -76,6 +103,7 @@ export default {
     return {
       // 用户列表数据
       fromdata: [],
+      
       // 分页部分数据
       // 当前页码
       currentPage: 1,
@@ -83,8 +111,30 @@ export default {
       totalPage: 0,
       // 每页显示的条数
       pageSize: 2,
+
       // 用户搜索的内容
-      serachValue: ''
+      serachValue: '',
+
+      // 添加用户部分
+      // 添加数据中的绑定的数据
+      form: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      },
+      AddDialogFormVisible: false,
+      // 添加表单验证
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 2, max: 5, message: '长度在 2 到 5 个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 12, message: '长度在 6 到 12 个字符', trigger: 'blur' }
+        ]
+      }
     };
   },
   created () {
@@ -98,8 +148,6 @@ export default {
       axios.defaults.headers.common['Authorization'] = token;
       var response = await this.$http.get(`users?pagenum=${this.currentPage}
         &pagesize=${this.pageSize}&query=${this.serachValue}`);
-      console.log(response);
-
       var status = response.data.meta.status;
       if (status === 200) {
         this.fromdata = response.data.data.users;
@@ -125,6 +173,27 @@ export default {
     // 当点击搜索按钮时
     handleSearch () {
       this.renderRequest()
+    },
+    // 当点击添加用户  确定按钮时
+    async handleAddUser () {
+      this.$refs.formRules.validate(async (valid) => {
+        if (valid) {
+          var res = await this.$http.post('users',this.form);
+          var {meta: {status, msg}} = res.data;
+            console.log(res);
+          if (status === 201) {
+            this.$message.success(msg)
+            this.renderRequest()
+            this.AddDialogFormVisible = false;
+            this.$refs.formRules.resetFields();
+          }else{
+            this.$message.error(msg)
+          }
+        } else {
+          this.$message.warning('表单验证失败');
+        }
+      });
+      
     }
   }
 };
