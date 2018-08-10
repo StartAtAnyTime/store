@@ -42,13 +42,14 @@ import axios from 'axios';
           .catch(err => {
             this.$message.error(err.status)
           })
+        password: '',
       }
     };
   },
   methods: {
     handleLogin(){
-      axios
-        .post('http://localhost:8888/api/private/v1/login',this.formdata)
+      this.$http
+        .post('login',this.formdata)
         .then(res => {
           console.log(res)
           if(res.data.meta.status === 200){
