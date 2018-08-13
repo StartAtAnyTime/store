@@ -14,35 +14,11 @@
 </template>
 
 <script>
-import axios from 'axios';
-  export default {
-    data() {
-      return {
-        labelPosition: 'top',
-        formdata: {
-          name: '',
-          password: '',
-        }
-      };
-    },
-    methods: {
-      handleLogin(){
-        axios
-          .post('http://localhost:8888/api/private/v1/login',this.formdata)
-          .then(res => {
-            console.log(res)
-            if(res.data.meta.status === 200){
-              sessionStorage.setItem('token',res.data.data.token)
-              this.$router.push('/');
-              this.$message.success(res.data.meta.msg);
-            }else{
-              this.$message.success(res.data.meta.msg);
-            }
-          })
-          .catch(err => {
-            this.$message.error(err.status)
-          })
-        password: '',
+export default {
+  data() {
+    return {
+      labelPosition: 'top',
+      formdata: {
         name: '',
         password: ''
       }

@@ -15,6 +15,7 @@
         <el-table
           stripe
           border
+          v-loading="loading"
           :data="formdata"
           style="width: 100%">
           <el-table-column
@@ -52,7 +53,7 @@
               <el-row>
                 <el-button type="primary" icon="el-icon-edit" size="mini" @click="handleEditUser(scope.row)"></el-button>
                 <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleDelUser(scope.row)"></el-button>
-                <el-button type="success" icon="el-icon-check" size="mini"></el-button>
+                <el-button type="success" icon="el-icon-check" size="mini" @click="handleRole(scope.row)"></el-button>
               </el-row>
             </template>
           </el-table-column>
@@ -71,7 +72,7 @@
       <!-- 添加弹出框 -->
       <el-dialog title="添加用户" :visible.sync="AddDialogFormVisible">
         <el-form
-        :model="form" 
+        :model="form"
         :rules="rules"
         ref="formRules"
         label-width="80px">
@@ -96,9 +97,9 @@
       </el-dialog>
 
       <!-- 编辑弹出框 -->
-      <el-dialog title="添加用户" :visible.sync="EditDialogFormVisible" @close="handleClose">
+      <el-dialog title="编辑用户" :visible.sync="EditDialogFormVisible" @close="handleClose">
         <el-form
-        :model="form" 
+        :model="form"
         ref="editForm"
         label-width="100px">
           <el-form-item label="用户名" prop="username">
@@ -118,7 +119,30 @@
         </div>
       </el-dialog>
 
-      <!-- 刪除弹出框 -->
+    <!-- 分配权限弹出框 -->
+      <el-dialog title="分配角色" :visible.sync="QuanXiandialogFormVisible">
+        <el-form
+        label-width="100px">
+          <el-form-item label="当前用户" >
+            {{currentName}}
+          </el-form-item>
+          <el-form-item label="请选择角色" >
+            <el-select v-model="currentRoleId">
+              <el-option label="请选择" :value="-1" disabled></el-option>
+              <el-option
+                v-for="item in roles"
+                :key="item.id"
+                :label="item.roleName"
+                :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="QuanXiandialogFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleRoleBtn">确 定</el-button>
+        </div>
+      </el-dialog>
 
     </el-card>
 </template>
@@ -128,9 +152,11 @@ import axios from 'axios';
 export default {
   data () {
     return {
+      // 网络较慢时出现圆圈
+      loading: false,
       // 用户列表数据
       formdata: [],
-      
+
       // 分页部分数据
       // 当前页码
       currentPage: 1,
@@ -166,7 +192,16 @@ export default {
 
       // 编辑用户数据
       // 控制编辑弹出框显示与隐藏
-      EditDialogFormVisible: false
+      EditDialogFormVisible: false,
+
+      // 分配角色数据
+      QuanXiandialogFormVisible: false,
+      // 当前角色名称
+      currentName: '',
+      // 当前角色id
+      currentRoleId: -1,
+      currentId: -1,
+      roles: []
     };
   },
   created () {
@@ -204,67 +239,66 @@ export default {
     },
     // 当点击搜索按钮时
     handleSearch () {
-      this.renderRequest()
+      this.renderRequest();
     },
     // 当点击添加用户  确定按钮时
     async handleAddUser () {
       this.$refs.formRules.validate(async (valid) => {
         if (valid) {
-          var res = await this.$http.post('users',this.form);
+          var res = await this.$http.post('users', this.form);
           var {meta: {status, msg}} = res.data;
-            console.log(res);
+          console.log(res);
           if (status === 201) {
-            this.$message.success(msg)
-            this.renderRequest()
+            this.$message.success(msg);
+            this.renderRequest();
             this.AddDialogFormVisible = false;
             this.$refs.formRules.resetFields();
-          }else{
-            this.$message.error(msg)
+          } else {
+            this.$message.error(msg);
           }
         } else {
           this.$message.warning('表单验证失败');
         }
       });
-      
     },
     // 当点击编辑按钮时
     async handleEditUser (user) {
-      this.EditDialogFormVisible= true;
-      const res = await this.$http.get(`users/${user.id}`)
-      console.log(user)
-      console.log(res)
+      this.EditDialogFormVisible = true;
+      const res = await this.$http.get(`users/${user.id}`);
+      console.log(user);
+      console.log(res);
       const {meta: {status, msg}} = res.data;
-      if(status === 200) {
+      if (status === 200) {
         this.form = res.data.data;
-        this.form.id= user.id;
+        this.form.id = user.id;
         console.log(this.form.id);
-        
+
         this.form.email = user.email;
         this.form.mobile = user.mobile;
-      }else{
-        this.$message.error(msg)
+      } else {
+        this.$message.error(msg);
       }
     },
     async handleEditUserBtn () {
       var res = await this.$http.put(`users/${this.form.id}`,
-      { email:this.form.email,
-        mobile:this.form.mobile})
-        const {meta: {status, msg}} = res.data;
-        if(status === 200) {
-          this.$message.success(msg);
-          this.renderRequest();
-          this.EditDialogFormVisible= false;
-          this.$refs.editForm.resetFields();
-          for(var key in this.form){
-            this.form[key]='';
-          }
-        }else{
-          this.$message.error(msg)
+        { email: this.form.email,
+          mobile: this.form.mobile});
+      const {meta: {status, msg}} = res.data;
+      if (status === 200) {
+        this.$message.success(msg);
+        this.renderRequest();
+        this.EditDialogFormVisible = false;
+        this.$refs.editForm.resetFields();
+        for (var key in this.form) {
+          this.form[key] = '';
         }
+      } else {
+        this.$message.error(msg);
+      }
     },
     handleClose() {
-      for(var key in this.form){
-        this.form[key]='';
+      for (var key in this.form) {
+        this.form[key] = '';
       }
     },
     async handleDelUser(user) {
@@ -273,11 +307,11 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
-        const res= await this.$http.delete(`users/${user.id}`);
+        const res = await this.$http.delete(`users/${user.id}`);
         const {meta: {status, msg}} = res.data;
-        if(status===200) {
+        if (status === 200) {
           // 如果当前页的用户只有一条并且不是第一页的时候，删除之后让页码调回一页
-          if(this.formdata.length==1 && this.currentPage != 1){
+          if (this.formdata.length == 1 && this.currentPage != 1) {
             this.currentPage--;
           }
           this.$message({
@@ -285,24 +319,53 @@ export default {
             message: '删除成功!'
           });
           this.renderRequest();
-        }else{
-          this.$message.error(msg)
-        }  
+        } else {
+          this.$message.error(msg);
+        }
       }).catch(() => {
         this.$message({
           type: 'info',
           message: '已取消删除'
-        });          
+        });
       });
     },
     async handleStatus (user) {
       console.log(user);
       const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`);
       const {meta: {status, msg}} = res.data;
-      if(status === 200) {
-        this.$message.success(msg)
-      }else{
-        this.$message.error(msg)
+      if (status === 200) {
+        this.$message.success(msg);
+      } else {
+        this.$message.error(msg);
+      }
+    },
+    // 当点击分配角色按钮的时候
+    async handleRole (user) {
+      this.QuanXiandialogFormVisible = true;
+      this.currentId = user.id;
+      this.currentName = user.username;
+      const response = await this.$http.get('roles');
+      const { meta: {status, msg}} = response.data;
+      if (status === 200) {
+        this.roles = response.data.data;
+        const userRoles = await this.$http.get(`users/${this.currentId}`);
+        const { meta: {status, msg}} = userRoles.data;
+        if (status === 200) {
+          this.currentRoleId = userRoles.data.data.rid;
+        }
+      } else {
+        this.$message.error(msg);
+      }
+    },
+    // 当前分配角色确定按钮点击的时候
+    async handleRoleBtn () {
+      const res = await this.$http.put(`users/${this.currentId}/role`, {rid: this.currentRoleId});
+      const { meta: {status, msg}} = res.data;
+      if (status === 200) {
+        this.$message.success(msg);
+        this.QuanXiandialogFormVisible = false;
+      } else {
+        this.$message.error(msg);
       }
     }
   }
