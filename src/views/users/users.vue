@@ -1,11 +1,7 @@
 <template>
     <el-card class="card">
       <!-- 面包屑 -->
-      <el-breadcrumb separator-class="el-icon-arrow-right">
-        <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-        <el-breadcrumb-item>用户管理</el-breadcrumb-item>
-        <el-breadcrumb-item>用户列表</el-breadcrumb-item>
-      </el-breadcrumb>
+      <my-breadcrumb level1="用户管理" level2="用户列表"></my-breadcrumb>
       <!-- 搜索框 -->
       <el-input clearable placeholder="请输入内容" class="input-with-select" v-model="serachValue">
        <el-button class="searchBtn" slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
@@ -377,4 +373,5 @@ export default {
   width: 300px;
   margin:10px 0;
 }
+
 </style>

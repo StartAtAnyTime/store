@@ -9,6 +9,10 @@ import 'element-ui/lib/theme-chalk/index.css';
 import MyAxios from './plugins/MyAxios';
 // 导入全局样式
 import './assets/css/index.css';
+// 导入全局的面包屑组件
+import MyBreadcrumb from '@/components/MyBreadcrumb';
+// 导入全局的。card的样式
+import '@/assets/css/card.css';
 
 // 使用插件已经配置完毕
 // // 配置全局的axios 给Vue 实例的prototype下添加方法供Vue实例使用
@@ -21,6 +25,9 @@ Vue.use(MyAxios);
 
 Vue.use(ElementUI);
 Vue.config.productionTip = false;
+
+// 全局注册面包屑组件
+Vue.component(MyBreadcrumb.name,MyBreadcrumb)
 
 /* eslint-disable no-new */
 new Vue({
