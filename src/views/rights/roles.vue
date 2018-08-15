@@ -5,7 +5,7 @@
 		<!-- 添加角色按钮 -->
 		<el-row class="add-row">
 			<el-col :span="24">
-				<el-button type="primary">主要按钮</el-button>
+				<el-button type="primary" plain>添加角色</el-button>
 			</el-col>
 		</el-row>
 		<!-- 表格部分 -->
@@ -13,8 +13,8 @@
 			border
 			stripe
 			v-loading="loading"
-      :data="data"
-      style="width: 100%">
+			:data="data"
+			style="width: 100%">
 			<el-table-column
 			type="expand">
 				<template slot-scope="scope">
@@ -73,27 +73,47 @@
 			<el-table-column type="index">
 
 			</el-table-column>
-      <el-table-column
-        prop="roleName"
-        label="角色名称"
-        width="300">
-      </el-table-column>
-      <el-table-column
-        prop="roleDesc"
-        label="角色描述"
-        width="300">
-      </el-table-column>
-      <el-table-column
-        label="操作">
+			<el-table-column
+				prop="roleName"
+				label="角色名称"
+				width="300">
+			</el-table-column>
+			<el-table-column
+				prop="roleDesc"
+				label="角色描述"
+				width="300">
+			</el-table-column>
+			<el-table-column
+				label="操作">
 				<template slot-scope="scope">
 					<el-row>
 						<el-button type="primary" icon="el-icon-edit" size="mini" plain></el-button>
 						<el-button type="danger" icon="el-icon-delete" size="mini" plain></el-button>
-						<el-button type="success" icon="el-icon-check" size="mini" plain></el-button>
+						<el-button type="success" icon="el-icon-check" size="mini" plain @click="handleOpenSetRightDialog(scope.row)"></el-button>
 					</el-row>
 				</template>
       </el-table-column>
     </el-table>
+		<!-- 点击分配权限按钮的弹出框 -->
+		<el-dialog
+			title="权限分配"
+			:visible.sync="rightDialogFormVisible">
+			<!-- Tree 树形控件 -->
+			<el-tree
+				ref="tree"
+				:data="treeData" 
+				:props="defaultProps"
+				node-key="id"
+				:default-checked-keys="checkedList"
+				show-checkbox
+				default-expand-all
+				>
+			</el-tree>
+			<div slot="footer" class="dialog-footer">
+				<el-button @click="rightDialogFormVisible = false">取 消</el-button>
+				<el-button type="primary" @click="handleBtnSure">确 定</el-button>
+			</div>
+		</el-dialog>
 	</el-card>
 </template>
 
@@ -102,7 +122,19 @@ export default {
 	data() {
 		return {
 			data: [],
-			loading: true
+			loading: true,
+			// 分配权限的数据
+			rightDialogFormVisible: false,
+			// tree部分数据
+			defaultProps:{
+				// 树节点显示的属性
+				label: 'authName',
+				// 指定子树为节点对象的某个属性值
+				children: 'children'
+			},
+			treeData: [],
+			checkedList: [],
+			currentRoleId: -1
 		}
 	},
 	created () {
@@ -121,6 +153,7 @@ export default {
 				this.$message.error(msg);
 			}
 		},
+		// 点击每个权限按钮的删除时
 		async handleDelRights(role, rightId) {
 			const res = await this.$http.delete(`roles/${role.id}/rights/${rightId}`);
 			const {meta: {status, msg}} = res.data;
@@ -129,6 +162,44 @@ export default {
 				this.$message.success(msg)
 			}else{
 				this.$message.error(msg);
+			}
+		},
+		// 点击分配权限角色的时候
+		async handleOpenSetRightDialog(role) {
+			this.currentRoleId = role.id;
+			this.checkedList.length=0;
+			this.rightDialogFormVisible=true;
+			const res= await this.$http.get('rights/tree');
+			console.log(res);
+			
+			const {meta: {status, msg}} = res.data;
+			if(status === 200) {
+				this.treeData = res.data.data;
+				
+				role.children.forEach((level1) => {
+					level1.children.forEach((level2) => {
+						level2.children.forEach((level3) => {
+							this.checkedList.push(level3.id)
+						})
+					})
+				})
+			}else{
+				this.$message.error(msg)
+			}
+		},
+		//当点击分配权限确定按钮时
+		async handleBtnSure () {
+			const checkedList= this.$refs.tree.getCheckedKeys();
+			const halfCheckedList = this.$refs.tree.getHalfCheckedKeys();
+			const arr = [...checkedList,...halfCheckedList];
+			const res = await this.$http.post(`roles/${this.currentRoleId}/rights`,{rids: arr.join(',')});
+			const {meta : {status, msg}} = res.data;
+			if(status === 200 ) {
+				this.$message.success(msg);
+				this.rightDialogFormVisible = false;
+				this.loadData();
+			}else{
+				this.$meessage.error(msg);
 			}
 		}
 	}
